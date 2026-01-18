@@ -5,33 +5,20 @@ const NOTES = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 
 const getRandomNote = () => {
     const clef = Math.random() > 0.5 ? 'treble' : 'bass';
-    // Range:
-    // Treble: C4 (Middle C) to A5.
-    // Bass: E2 to C4.
-
     let octave, noteIndex;
 
     if (clef === 'treble') {
-        // C4 to A5
-        // C4 is index 0 in our logic roughly.
-        // Let's pick octave 4 or 5.
         octave = Math.floor(Math.random() * 2) + 4; // 4 or 5
-        // If 5, limit to A (index 5)
         const maxIndex = octave === 5 ? 5 : 6;
         noteIndex = Math.floor(Math.random() * (maxIndex + 1));
     } else {
-        // Bass
-        // E2 to C4.
         octave = Math.floor(Math.random() * 2) + 2; // 2, 3
         if (octave === 4) {
-            // Only C4 allowed
             octave = 4;
             noteIndex = 0;
         } else if (octave === 2) {
-            // E2 is min, which is index 2.
             noteIndex = Math.floor(Math.random() * 5) + 2;
         } else {
-            // 3: C3 to B3
             noteIndex = Math.floor(Math.random() * 7);
         }
     }
@@ -44,10 +31,9 @@ const getRandomNote = () => {
 };
 
 const Staff = ({ note }) => {
-    // SVG config scaled up 2x
     const width = 400;
     const height = 400;
-    const lineGap = 20; // Space between lines (doubled)
+    const lineGap = 20;
     const staffTop = 160;
     const staffBottom = staffTop + 4 * lineGap;
 
@@ -77,7 +63,6 @@ const Staff = ({ note }) => {
     }
 
     const clefSymbol = note.clef === 'treble' ? '𝄞' : '𝄢';
-    const clefY = note.clef === 'treble' ? staffBottom - lineGap : staffTop + lineGap;
 
     return (
         <div className="staff-container" style={{ transform: 'scale(1)', transition: 'transform 0.3s' }}>
@@ -147,41 +132,16 @@ const MusicTrainer = () => {
     const [currentNote, setCurrentNote] = useState(getRandomNote());
     const [userAnswer, setUserAnswer] = useState('');
     const [status, setStatus] = useState('guessing'); // guessing, feedback, finished
-    const [feedback, setFeedback] = useState('');
+    const [feedbackType, setFeedbackType] = useState(null); // 'correct', 'wrong', null
+    const [feedbackMessage, setFeedbackMessage] = useState('');
     const inputRef = useRef(null);
-    const nextBtnRef = useRef(null);
 
+    // Auto-focus input when guessing
     useEffect(() => {
         if (status === 'guessing' && inputRef.current) {
             inputRef.current.focus();
         }
-        else if (status === 'feedback') {
-            if (nextBtnRef.current) {
-                nextBtnRef.current.focus();
-            }
-        }
     }, [status]);
-
-    const submitAnswer = () => {
-        const ans = userAnswer.trim().toUpperCase();
-        if (!ans) return;
-
-        // Check answer
-        const correct = currentNote.note;
-        if (ans === correct) {
-            setScore(s => s + 1);
-            setFeedback('Correct!');
-        } else {
-            setFeedback(`Wrong! It was ${correct}${currentNote.octave}`);
-        }
-        setStatus('feedback');
-    };
-
-    const handleKeyDown = (e) => {
-        if (e.key === 'Enter') {
-            submitAnswer();
-        }
-    };
 
     const handleNext = () => {
         if (round >= 10) {
@@ -190,24 +150,62 @@ const MusicTrainer = () => {
             setRound(r => r + 1);
             setCurrentNote(getRandomNote());
             setUserAnswer('');
-            setFeedback('');
+            setFeedbackType(null);
+            setFeedbackMessage('');
             setStatus('guessing');
         }
     };
 
-    const handleNextKeyDown = (e) => {
-        if (e.key === 'Enter') {
-            handleNext();
+    const submitAnswer = () => {
+        const ans = userAnswer.trim().toUpperCase();
+        if (!ans) return;
+
+        const correct = currentNote.note;
+
+        if (ans === correct) {
+            // CORRECT
+            setScore(s => s + 1);
+            setFeedbackType('correct');
+            setFeedbackMessage('Correct!');
+            setStatus('feedback');
+
+            // Immediate advance (short flash)
+            setTimeout(() => {
+                handleNext();
+            }, 500);
+        } else {
+            // WRONG
+            setFeedbackType('wrong');
+            setFeedbackMessage(`Wrong! It was ${correct}`);
+            setStatus('feedback');
+
+            // 3 Second delay to study
+            setTimeout(() => {
+                handleNext();
+            }, 3000);
         }
-    }
+    };
+
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            submitAnswer();
+        }
+    };
 
     const handleRestart = () => {
         setRound(1);
         setScore(0);
         setCurrentNote(getRandomNote());
         setUserAnswer('');
-        setFeedback('');
+        setFeedbackType(null);
         setStatus('guessing');
+    };
+
+    // Dynamic background flash
+    const getFlashStyle = () => {
+        if (feedbackType === 'correct') return { boxShadow: '0 0 100px rgba(16, 185, 129, 0.5) inset', borderColor: 'var(--success-color)' };
+        if (feedbackType === 'wrong') return { boxShadow: '0 0 100px rgba(239, 68, 68, 0.5) inset', borderColor: 'var(--danger-color)' };
+        return {};
     };
 
     return (
@@ -223,27 +221,51 @@ const MusicTrainer = () => {
                 </div>
             </header>
 
-            <div className="game-area" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+            <div className="game-area"
+                style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column', // Prepare for vertical results, but game is row
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '100%'
+                }}>
+
                 {status !== 'finished' ? (
-                    <>
-                        {/* Scaled SVG */}
-                        <div className="staff-display" style={{ marginBottom: '3rem', filter: 'drop-shadow(0 0 20px rgba(6,182,212,0.1))' }}>
+                    <div className="play-container" style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4rem',
+                        width: '100%',
+                        transition: 'all 0.3s'
+                    }}>
+                        {/* LEFT: Scaled SVG */}
+                        <div className="staff-display" style={{
+                            filter: 'drop-shadow(0 0 20px rgba(6,182,212,0.1))',
+                            transform: feedbackType === 'correct' ? 'scale(1.1)' : 'scale(1)',
+                            transition: 'transform 0.2s'
+                        }}>
                             <Staff note={currentNote} />
                         </div>
 
-                        {/* Interaction Area with Better Alignment */}
+                        {/* RIGHT: Interaction Area */}
                         <div className="interaction-area" style={{
-                            flex: 1,
-                            width: '100%',
                             display: 'flex',
                             flexDirection: 'column',
                             alignItems: 'center',
-                            justifyContent: 'center', /* Centered vertically */
-                            minHeight: '200px'
+                            justifyContent: 'center',
+                            padding: '3rem',
+                            borderRadius: '2rem',
+                            background: 'rgba(30, 41, 59, 0.4)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            transition: 'all 0.3s',
+                            ...getFlashStyle()
                         }}>
                             {status === 'guessing' ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', animation: 'fadeIn 0.3s ease-out' }}>
-                                    <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)', textAlign: 'center' }}>Type note (A-G) and press Enter</p>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)', textAlign: 'center' }}>Type note (A-G)</p>
                                     <input
                                         ref={inputRef}
                                         type="text"
@@ -254,57 +276,55 @@ const MusicTrainer = () => {
                                         autoFocus
                                         style={{
                                             padding: '1rem',
-                                            fontSize: '3rem',
+                                            fontSize: '4rem',
                                             textAlign: 'center',
-                                            width: '120px',
-                                            background: 'rgba(30, 41, 59, 0.8)',
+                                            width: '140px',
+                                            height: '140px',
+                                            background: 'rgba(15, 23, 42, 0.8)',
                                             border: '2px solid var(--primary-color)',
                                             color: 'var(--primary-color)',
                                             borderRadius: '1rem',
                                             outline: 'none',
-                                            boxShadow: '0 0 30px -5px rgba(6, 182, 212, 0.3)',
-                                            fontWeight: 'bold'
+                                            boxShadow: '0 0 30px -5px rgba(6, 182, 212, 0.2)',
+                                            fontWeight: '800'
                                         }}
                                     />
+                                    <p style={{ marginTop: '1rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Press [Enter] to submit</p>
                                 </div>
                             ) : (
-                                <div className="feedback-section" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', animation: 'fadeIn 0.3s ease-out' }}>
-                                    <h2 style={{
-                                        fontSize: '2.5rem',
-                                        color: feedback.startsWith('Correct') ? 'var(--success-color)' : 'var(--danger-color)',
-                                        marginBottom: '1.5rem',
-                                        textShadow: '0 0 20px rgba(0,0,0,0.5)'
-                                    }}>
-                                        {feedback}
-                                    </h2>
-                                    <button
-                                        id="next-btn"
-                                        ref={nextBtnRef}
-                                        onClick={handleNext}
-                                        onKeyDown={handleNextKeyDown}
-                                        autoFocus
-                                        style={{
-                                            padding: '1rem 3rem',
-                                            fontSize: '1.2rem',
-                                            background: 'var(--secondary-color)',
-                                            border: 'none',
-                                            borderRadius: '0.8rem',
-                                            color: 'white',
-                                            cursor: 'pointer',
-                                            fontWeight: 'bold',
-                                            boxShadow: '0 10px 20px -5px rgba(139, 92, 246, 0.4)',
-                                            transition: 'transform 0.2s',
-                                            outline: 'none'
-                                        }}
-                                        onMouseOver={(e) => e.target.style.transform = 'translateY(-2px)'}
-                                        onMouseOut={(e) => e.target.style.transform = 'translateY(0)'}
-                                    >
-                                        {round >= 10 ? 'See Results' : 'Next Note ↵'}
-                                    </button>
+                                <div className="feedback-section" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', animation: 'fadeIn 0.2s ease-out' }}>
+
+                                    {feedbackType === 'correct' ? (
+                                        <h2 style={{ fontSize: '3rem', color: 'var(--success-color)', textShadow: '0 0 20px rgba(16, 185, 129, 0.5)' }}>
+                                            Correct!
+                                        </h2>
+                                    ) : (
+                                        <>
+                                            <h2 style={{ fontSize: '2.5rem', color: 'var(--danger-color)', marginBottom: '0.5rem' }}>Wrong!</h2>
+                                            <p style={{ color: 'var(--text-secondary)', fontSize: '1.2rem' }}>Answer was:</p>
+                                            <div style={{
+                                                fontSize: '4rem',
+                                                fontWeight: '800',
+                                                color: 'var(--text-primary)',
+                                                margin: '1rem 0'
+                                            }}>
+                                                {currentNote.note}
+                                            </div>
+                                            <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
+                                                <div style={{
+                                                    width: '100%',
+                                                    height: '100%',
+                                                    background: 'var(--primary-color)',
+                                                    animation: 'countdown 3s linear forwards'
+                                                }} />
+                                            </div>
+                                        </>
+                                    )}
+
                                 </div>
                             )}
                         </div>
-                    </>
+                    </div>
                 ) : (
                     <div className="results-section" style={{ textAlign: 'center', animation: 'scaleIn 0.5s cubic-bezier(0.4, 0, 0.2, 1)' }}>
                         <h2 style={{ fontSize: '4rem', marginBottom: '1rem', background: 'linear-gradient(to right, var(--primary-color), var(--accent-color))', WebkitBackgroundClip: 'text', color: 'transparent' }}>Complete!</h2>
@@ -338,6 +358,7 @@ const MusicTrainer = () => {
             <style>{`
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
                 @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+                @keyframes countdown { from { width: 100%; } to { width: 0%; } }
             `}</style>
         </div>
     );
