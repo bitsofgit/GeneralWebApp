@@ -149,19 +149,16 @@ const MusicTrainer = () => {
     const [status, setStatus] = useState('guessing'); // guessing, feedback, finished
     const [feedback, setFeedback] = useState('');
     const inputRef = useRef(null);
+    const nextBtnRef = useRef(null);
 
     useEffect(() => {
         if (status === 'guessing' && inputRef.current) {
             inputRef.current.focus();
         }
-        else if (status === 'feedback' && inputRef.current) {
-            // Keep focus to allow Enter to go next if we add that later, 
-            // but for now the next button is focused.
-            // Actually, let's auto-focus the next button.
-            setTimeout(() => {
-                const nextBtn = document.getElementById('next-btn');
-                if (nextBtn) nextBtn.focus();
-            }, 50);
+        else if (status === 'feedback') {
+            if (nextBtnRef.current) {
+                nextBtnRef.current.focus();
+            }
         }
     }, [status]);
 
@@ -229,13 +226,23 @@ const MusicTrainer = () => {
             <div className="game-area" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
                 {status !== 'finished' ? (
                     <>
+                        {/* Scaled SVG */}
                         <div className="staff-display" style={{ marginBottom: '3rem', filter: 'drop-shadow(0 0 20px rgba(6,182,212,0.1))' }}>
                             <Staff note={currentNote} />
                         </div>
 
-                        <div className="interaction-area" style={{ height: '150px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                        {/* Interaction Area with Better Alignment */}
+                        <div className="interaction-area" style={{
+                            flex: 1,
+                            width: '100%',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center', /* Centered vertically */
+                            minHeight: '200px'
+                        }}>
                             {status === 'guessing' ? (
-                                <div style={{ animation: 'fadeIn 0.3s ease-out' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', animation: 'fadeIn 0.3s ease-out' }}>
                                     <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)', textAlign: 'center' }}>Type note (A-G) and press Enter</p>
                                     <input
                                         ref={inputRef}
@@ -244,6 +251,7 @@ const MusicTrainer = () => {
                                         value={userAnswer}
                                         onChange={(e) => setUserAnswer(e.target.value.toUpperCase())}
                                         onKeyDown={handleKeyDown}
+                                        autoFocus
                                         style={{
                                             padding: '1rem',
                                             fontSize: '3rem',
@@ -260,7 +268,7 @@ const MusicTrainer = () => {
                                     />
                                 </div>
                             ) : (
-                                <div className="feedback-section" style={{ textAlign: 'center', animation: 'fadeIn 0.3s ease-out' }}>
+                                <div className="feedback-section" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', animation: 'fadeIn 0.3s ease-out' }}>
                                     <h2 style={{
                                         fontSize: '2.5rem',
                                         color: feedback.startsWith('Correct') ? 'var(--success-color)' : 'var(--danger-color)',
@@ -271,8 +279,10 @@ const MusicTrainer = () => {
                                     </h2>
                                     <button
                                         id="next-btn"
+                                        ref={nextBtnRef}
                                         onClick={handleNext}
                                         onKeyDown={handleNextKeyDown}
+                                        autoFocus
                                         style={{
                                             padding: '1rem 3rem',
                                             fontSize: '1.2rem',
