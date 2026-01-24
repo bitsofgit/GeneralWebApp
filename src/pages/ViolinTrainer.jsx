@@ -13,32 +13,32 @@ const getRandomNote = () => {
 
     const violinNotes = [
         // G string (G3 octave)
-        { note: 'G', octave: 3, clef: 'treble' }, // G (open)
-        { note: 'A', octave: 3, clef: 'treble' }, // G1
-        { note: 'B', octave: 3, clef: 'treble' }, // G2
-        { note: 'C', octave: 4, clef: 'treble' }, // G3
-        { note: 'D', octave: 4, clef: 'treble' }, // G4
+        { note: 'G', octave: 3, clef: 'treble', displayName: 'G' },   // G (open)
+        { note: 'A', octave: 3, clef: 'treble', displayName: 'G1' },  // G1
+        { note: 'B', octave: 3, clef: 'treble', displayName: 'G2' },  // G2
+        { note: 'C', octave: 4, clef: 'treble', displayName: 'G3' },  // G3
+        { note: 'D', octave: 4, clef: 'treble', displayName: 'G4' },  // G4
 
         // D string (D4 octave)
-        { note: 'D', octave: 4, clef: 'treble' }, // D (open)
-        { note: 'E', octave: 4, clef: 'treble' }, // D1
-        { note: 'F', octave: 4, clef: 'treble' }, // D2
-        { note: 'G', octave: 4, clef: 'treble' }, // D3
-        { note: 'A', octave: 4, clef: 'treble' }, // D4
+        { note: 'D', octave: 4, clef: 'treble', displayName: 'D' },   // D (open)
+        { note: 'E', octave: 4, clef: 'treble', displayName: 'D1' },  // D1
+        { note: 'F', octave: 4, clef: 'treble', displayName: 'D2' },  // D2
+        { note: 'G', octave: 4, clef: 'treble', displayName: 'D3' },  // D3
+        { note: 'A', octave: 4, clef: 'treble', displayName: 'D4' },  // D4
 
         // A string (A4 octave)
-        { note: 'A', octave: 4, clef: 'treble' }, // A (open)
-        { note: 'B', octave: 4, clef: 'treble' }, // A1
-        { note: 'C', octave: 5, clef: 'treble' }, // A2
-        { note: 'D', octave: 5, clef: 'treble' }, // A3
-        { note: 'E', octave: 5, clef: 'treble' }, // A4
+        { note: 'A', octave: 4, clef: 'treble', displayName: 'A' },   // A (open)
+        { note: 'B', octave: 4, clef: 'treble', displayName: 'A1' },  // A1
+        { note: 'C', octave: 5, clef: 'treble', displayName: 'A2' },  // A2
+        { note: 'D', octave: 5, clef: 'treble', displayName: 'A3' },  // A3
+        { note: 'E', octave: 5, clef: 'treble', displayName: 'A4' },  // A4
 
         // E string (E5 octave)
-        { note: 'E', octave: 5, clef: 'treble' }, // E (open)
-        { note: 'F', octave: 5, clef: 'treble' }, // E1
-        { note: 'G', octave: 5, clef: 'treble' }, // E2
-        { note: 'A', octave: 5, clef: 'treble' }, // E3
-        { note: 'B', octave: 5, clef: 'treble' }, // E4
+        { note: 'E', octave: 5, clef: 'treble', displayName: 'E' },   // E (open)
+        { note: 'F', octave: 5, clef: 'treble', displayName: 'E1' },  // E1
+        { note: 'G', octave: 5, clef: 'treble', displayName: 'E2' },  // E2
+        { note: 'A', octave: 5, clef: 'treble', displayName: 'E3' },  // E3
+        { note: 'B', octave: 5, clef: 'treble', displayName: 'E4' },  // E4
     ];
 
     // Pick a random note from the violin notes array
@@ -174,7 +174,7 @@ const ViolinTrainer = () => {
         const ans = userAnswer.trim().toUpperCase();
         if (!ans) return;
 
-        const correct = currentNote.note;
+        const correct = currentNote.displayName;
 
         if (ans === correct) {
             setScore(s => s + 1);
@@ -270,11 +270,11 @@ const ViolinTrainer = () => {
                         }}>
                             {status === 'guessing' ? (
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                    <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)', textAlign: 'center' }}>Type note (A-G)</p>
+                                    <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)', textAlign: 'center' }}>Type note (e.g., G, G1, D2, A3, E4)</p>
                                     <input
                                         ref={inputRef}
                                         type="text"
-                                        maxLength="1"
+                                        maxLength="2"
                                         value={userAnswer}
                                         onChange={(e) => setUserAnswer(e.target.value.toUpperCase())}
                                         onKeyDown={handleKeyDown}
@@ -313,7 +313,7 @@ const ViolinTrainer = () => {
                                                 color: 'var(--text-primary)',
                                                 margin: '1rem 0'
                                             }}>
-                                                {currentNote.note}
+                                                {currentNote.displayName}
                                             </div>
                                             <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
                                                 <div style={{
