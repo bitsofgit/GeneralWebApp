@@ -4,37 +4,46 @@ import { Link } from 'react-router-dom';
 const NOTES = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 
 const getRandomNote = () => {
-    // Violin is Treble Clef ONLY
-    const clef = 'treble';
+    // Violin has 4 strings: G, D, A, E
+    // Each string has positions 0 (open) through 4
+    // G string (G3): G, A, B, C, D (positions 0-4)
+    // D string (D4): D, E, F, G, A (positions 0-4)
+    // A string (A4): A, B, C, D, E (positions 0-4)
+    // E string (E5): E, F, G, A, B (positions 0-4)
 
-    // Range: G3 (lowest string) to C6
-    // G3 is index 4 in NOTES=['C','D','E','F','G','A','B']
+    const violinNotes = [
+        // G string (G3 octave)
+        { note: 'G', octave: 3, clef: 'treble' }, // G (open)
+        { note: 'A', octave: 3, clef: 'treble' }, // G1
+        { note: 'B', octave: 3, clef: 'treble' }, // G2
+        { note: 'C', octave: 4, clef: 'treble' }, // G3
+        { note: 'D', octave: 4, clef: 'treble' }, // G4
 
-    // We need to pick an octave 3, 4, 5, or 6
-    // Weighted logic or simple rejection sampling?
-    // Let's use customized logic for valid ranges per octave.
+        // D string (D4 octave)
+        { note: 'D', octave: 4, clef: 'treble' }, // D (open)
+        { note: 'E', octave: 4, clef: 'treble' }, // D1
+        { note: 'F', octave: 4, clef: 'treble' }, // D2
+        { note: 'G', octave: 4, clef: 'treble' }, // D3
+        { note: 'A', octave: 4, clef: 'treble' }, // D4
 
-    const octave = Math.floor(Math.random() * 4) + 3; // 3, 4, 5, 6
+        // A string (A4 octave)
+        { note: 'A', octave: 4, clef: 'treble' }, // A (open)
+        { note: 'B', octave: 4, clef: 'treble' }, // A1
+        { note: 'C', octave: 5, clef: 'treble' }, // A2
+        { note: 'D', octave: 5, clef: 'treble' }, // A3
+        { note: 'E', octave: 5, clef: 'treble' }, // A4
 
-    let noteIndex;
+        // E string (E5 octave)
+        { note: 'E', octave: 5, clef: 'treble' }, // E (open)
+        { note: 'F', octave: 5, clef: 'treble' }, // E1
+        { note: 'G', octave: 5, clef: 'treble' }, // E2
+        { note: 'A', octave: 5, clef: 'treble' }, // E3
+        { note: 'B', octave: 5, clef: 'treble' }, // E4
+    ];
 
-    if (octave === 3) {
-        // G3, A3, B3
-        // Indices 4, 5, 6
-        noteIndex = Math.floor(Math.random() * 3) + 4;
-    } else if (octave === 6) {
-        // Only C6
-        noteIndex = 0;
-    } else {
-        // Octaves 4 and 5: Full range C-B
-        noteIndex = Math.floor(Math.random() * 7);
-    }
-
-    return {
-        note: NOTES[noteIndex],
-        octave,
-        clef
-    };
+    // Pick a random note from the violin notes array
+    const randomIndex = Math.floor(Math.random() * violinNotes.length);
+    return violinNotes[randomIndex];
 };
 
 const Staff = ({ note }) => {
